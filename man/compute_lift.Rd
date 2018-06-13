@@ -13,8 +13,7 @@ positive class and the quantiles.}
 \item{obs}{A string (default = "obs"). The column's name of the observed
 class.}
 
-\item{pos_class}{A string (default = "Yes"). The column's name of the
-probabilities predicted for the positive class.}
+\item{pos_class}{A string (default = "Yes"). How the positive class is coded.}
 
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}

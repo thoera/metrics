@@ -4,7 +4,7 @@ Version: 0.0.0.9000
 Authors@R: person("Thomas", "Erard", email = "erard.thomas@gmail.com", role = c("aut", "cre"))
 URL: https://github.com/thoera/metrics
 BugReports: https://github.com/thoera/metrics/issues
-Description: This packages implements a consistent interface to compute metrics for classification models. It also offers an easy way to visualize those metrics.
+Description: This package implements a consistent interface to compute metrics for classification models. It also offers an easy way to visualize those metrics.
 Depends: R (>= 3.4.4)
 License: MIT + file LICENSE
 Encoding: UTF-8

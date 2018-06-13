@@ -4,17 +4,22 @@
 \alias{compute_predict_class}
 \title{Compute the class predicted for a given threshold}
 \usage{
-compute_predict_class(data, pos_class = "Yes", threshold = 0.5)
+compute_predict_class(data, threshold = 0.5, pos_class_col = "Yes",
+  pos_class = "Yes", neg_class = "No")
 }
 \arguments{
 \item{data}{A dataframe with the probabilities computed for the positive
 class.}
 
-\item{pos_class}{A string (default = "Yes"). The column's name of the
-predicted probabilities.}
-
 \item{threshold}{A numeric value (default = 0.5) to decide if an observation
 will be affected in the positive class.}
+
+\item{pos_class_col}{A string (default = "Yes"). The column's name of the
+predicted probabilities.}
+
+\item{pos_class}{A string (default = "Yes"). How the positive class is coded.}
+
+\item{neg_class}{A string (default = "No"). How the negative class is coded.}
 }
 \value{
 A dataframe with class predicted.

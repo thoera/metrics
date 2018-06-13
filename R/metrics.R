@@ -4,20 +4,30 @@
 #'
 #' @param data A dataframe with the probabilities computed for the positive
 #'   class.
-#' @param pos_class A string (default = "Yes"). The column's name of the
-#'   predicted probabilities.
 #' @param threshold A numeric value (default = 0.5) to decide if an observation
 #'   will be affected in the positive class.
+#' @param pos_class_col A string (default = "Yes"). The column's name of the
+#'   predicted probabilities.
+#' @param pos_class A string (default = "Yes"). How the positive class is coded.
+#' @param neg_class A string (default = "No"). How the negative class is coded.
 #' @return A dataframe with class predicted.
 #' @seealso \code{\link{compute_metrics}},
 #'   \code{\link{compute_optimal_threshold}}, \code{\link{objective_threshold}}
 #' @examples
 #' # add an example here
 #' @export
-compute_predict_class <- function(data, pos_class = "Yes", threshold = 0.5) {
-  data[["pred"]] <- ifelse(data[[pos_class]] > threshold, "Yes", "No")
-  data[["pred"]] <- factor(data[["pred"]], levels = c("Yes", "No"),
-                           labels = c("Yes", "No"))
+compute_predict_class <- function(
+  data,
+  threshold = 0.5,
+  pos_class_col = "Yes",
+  pos_class = "Yes",
+  neg_class = "No"
+) {
+  data[["pred"]] <- ifelse(data[[pos_class_col]] > threshold,
+                           pos_class, neg_class)
+  data[["pred"]] <- factor(data[["pred"]],
+                           levels = c(pos_class, neg_class),
+                           labels = c(pos_class, neg_class))
   return(data)
 }
 
@@ -38,8 +48,13 @@ compute_predict_class <- function(data, pos_class = "Yes", threshold = 0.5) {
 #' @examples
 #' # add an example here
 #' @export
-compute_metrics <- function(data, obs = "obs", pred = "pred",
-                            pos_class = "Yes", neg_class = "No") {
+compute_metrics <- function(
+  data,
+  obs = "obs",
+  pred = "pred",
+  pos_class = "Yes",
+  neg_class = "No"
+) {
   metrics <- vector("list", 6L)
   names(metrics) <- c("Accuracy", "Precision", "Recall",
                       "Specificity", "NPV", "F1")
@@ -120,9 +135,10 @@ objective_threshold <- function(data, metric, objective) {
 #' @examples
 #' # add an example here
 #' @export
-draw_metrics <- function(data,
-                         metric = c("Accuracy", "Precision", "Recall",
-                                    "Specificity", "NPV", "F1")) {
+draw_metrics <- function(
+  data,
+  metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1")
+) {
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
   }
@@ -138,7 +154,7 @@ draw_metrics <- function(data,
   }
 
   # keep only the selected metrics
-  data_lg <- data_lg[data_lg$metrics %in% metric, ]
+  data_lg <- data_lg[data_lg[["metrics"]] %in% metric, ]
 
   ggplot2::ggplot(data_lg,
                   ggplot2::aes_string(x = "threshold",
@@ -147,9 +163,7 @@ draw_metrics <- function(data,
     ggplot2::geom_line(size = 0.8, na.rm = TRUE) +
     ggplot2::labs(title = "Metrics", x = "threshold", y = "value") +
     # use facets if 'data' is a list
-    {if (!inherits(data, "data.frame")) ggplot2::facet_wrap(~ set)} +
-    colorange::theme_elegant() +
-    ggplot2::theme(legend.title = ggplot2::element_blank())
+    {if (!inherits(data, "data.frame")) ggplot2::facet_wrap(~ set)}
 }
 
 #' Plot the ROC curve
@@ -198,9 +212,7 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 
   g + ggplot2::labs(title = "ROC curve",
                     x = "False Positive Rate (1 - Specificity)",
-                    y = "True Positive Rate (Sensitivity)") +
-    colorange::theme_elegant() +
-    ggplot2::theme(legend.title = ggplot2::element_blank())
+                    y = "True Positive Rate (Sensitivity)")
 }
 
 #' Compute the quantiles
@@ -208,7 +220,7 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' Compute the quantiles.
 #'
 #' @param data A dataframe with the probabilities for the positive class.
-#' @param pos_class A string (default = "Yes"). The column's name of the
+#' @param pos_class_col A string (default = "Yes"). The column's name of the
 #'   predicted probabilities.
 #' @param n A numeric value (default = 20). The number of quantiles to compute.
 #' @return A dataframe with the quantiles computed.
@@ -216,10 +228,10 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' @examples
 #' # add an example here
 #' @export
-qcut <- function(data, pos_class = "Yes", n = 20L) {
+qcut <- function(data, pos_class_col = "Yes", n = 20L) {
   data[["quantile"]] <- (n + 1L) - findInterval(
-    data[[pos_class]],
-    stats::quantile(data[[pos_class]], seq(0L, 1L, length = n + 1L)),
+    data[[pos_class_col]],
+    stats::quantile(data[[pos_class_col]], seq(0L, 1L, length = n + 1L)),
     all.inside = TRUE
   )
   return(data)
@@ -233,8 +245,7 @@ qcut <- function(data, pos_class = "Yes", n = 20L) {
 #'   positive class and the quantiles.
 #' @param obs A string (default = "obs"). The column's name of the observed
 #'   class.
-#' @param pos_class A string (default = "Yes"). The column's name of the
-#'   probabilities predicted for the positive class.
+#' @param pos_class A string (default = "Yes"). How the positive class is coded.
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
 #' @return A dataframe with the lift and the cumulative lift computed for each
@@ -243,34 +254,41 @@ qcut <- function(data, pos_class = "Yes", n = 20L) {
 #' @examples
 #' # add an example here
 #' @export
-compute_lift <- function(data, obs = "obs", pos_class = "Yes",
-                         quantile = "quantile") {
+compute_lift <- function(
+  data,
+  obs = "obs",
+  pos_class = "Yes",
+  quantile = "quantile"
+) {
   # get the target rate
-  target_rate <- sum(data[[obs]] == "Yes") / nrow(data)
+  target_rate <- sum(data[[obs]] == pos_class) / nrow(data)
 
   # compute the number of targets in each quantile
   data <- as.data.frame(
     table(quantile = data[[quantile]], obs = data[[obs]])
   )
-  data <- data[data[[obs]] == "Yes", ]
-  data$quantile <- seq_len(nrow(data))
+  data <- data[data[[obs]] == pos_class, ]
+  data[["quantile"]] <- seq_len(nrow(data))
 
   # compute the lift
   quantile_per <- (1L / nrow(data))
-  data$lift <- data$Freq / sum(data$Freq) / quantile_per
+  data[["lift"]] <- data[["Freq"]] / sum(data[["Freq"]]) / quantile_per
 
   # compute the cumulative lift
-  data$cumulative_lift <- cumsum(data$lift) / seq_along(data$lift)
+  data[["cumulative_lift"]] <- cumsum(data[["lift"]]) /
+    seq_along(data[["lift"]])
 
-  data$cumulative_lift_per <- (data$cumulative_lift * data$quantile *
-                                 quantile_per)
+  data[["cumulative_lift_per"]] <- (data[["cumulative_lift"]] *
+                                      data[["quantile"]] * quantile_per)
 
   # compute the lift for the ideal model
   max_lift <- 1L / target_rate * quantile_per
 
-  data$cumulative_lift_per_ideal <- data$quantile * max_lift
-  data$cumulative_lift_per_ideal <- ifelse(data$cumulative_lift_per_ideal > 1,
-                                           1, data$cumulative_lift_per_ideal)
+  data[["cumulative_lift_per_ideal"]] <- data[["quantile"]] * max_lift
+  data[["cumulative_lift_per_ideal"]] <- ifelse(
+    data[["cumulative_lift_per_ideal"]] > 1,
+    1, data[["cumulative_lift_per_ideal"]]
+  )
 
   data <- rbind(c(0, NA, NA, NA, NA, 0, 0), data)
 
@@ -338,9 +356,7 @@ draw_lift <- function(
       ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative gain chart",
-                    x = "% of population", y = "% of target") +
-      colorange::theme_elegant() +
-      ggplot2::theme(legend.title = ggplot2::element_blank())
+                    x = "% of population", y = "% of target")
   }
 
   # lift curve
@@ -361,9 +377,7 @@ draw_lift <- function(
     g <- g +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
-      ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift") +
-      colorange::theme_elegant() +
-      ggplot2::theme(legend.title = ggplot2::element_blank())
+      ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift")
   }
 
   # cumulative lift curve
@@ -385,9 +399,7 @@ draw_lift <- function(
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative lift curve",
-                    x = "% of population", y = "Lift") +
-      colorange::theme_elegant() +
-      ggplot2::theme(legend.title = ggplot2::element_blank())
+                    x = "% of population", y = "Lift")
   }
   return(g)
 }
