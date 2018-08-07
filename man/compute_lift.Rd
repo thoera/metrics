@@ -4,7 +4,8 @@
 \alias{compute_lift}
 \title{Compute the lift}
 \usage{
-compute_lift(data, obs = "obs", pos_class = "Yes", quantile = "quantile")
+compute_lift(data, obs = "obs", pos_class = "Yes",
+  quantile = "quantile")
 }
 \arguments{
 \item{data}{A dataframe with the observed class, the probabilities for the

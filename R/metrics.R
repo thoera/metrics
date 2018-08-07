@@ -139,6 +139,8 @@ draw_metrics <- function(
   data,
   metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1")
 ) {
+  metric <- match.arg(metric)
+
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
   }
@@ -301,8 +303,8 @@ compute_lift <- function(
 #'
 #' @param data A dataframe or a list of dataframes with the lift and the
 #'   cumulative lift per quantile.
-#' @param type A string (default = "obs"). The column's name of the observed
-#'   class.
+#' @param type A string (default = "gain_chart"). The type of plot. One of:
+#'   "gain_chart", "lift_curve" or "cumulative_lift_curve".
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
 #' @param lift A string (default = "lift"). The column's name of the lift

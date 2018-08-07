@@ -4,8 +4,8 @@
 \alias{draw_lift}
 \title{Plot the lift curves}
 \usage{
-draw_lift(data, type = c("gain_chart", "lift_curve", "cumulative_lift_curve"),
-  quantile = "quantile", lift = "lift",
+draw_lift(data, type = c("gain_chart", "lift_curve",
+  "cumulative_lift_curve"), quantile = "quantile", lift = "lift",
   cumulative_lift = "cumulative_lift",
   cumulative_lift_per = "cumulative_lift_per",
   cumulative_lift_per_ideal = "cumulative_lift_per_ideal")
@@ -14,8 +14,8 @@ draw_lift(data, type = c("gain_chart", "lift_curve", "cumulative_lift_curve"),
 \item{data}{A dataframe or a list of dataframes with the lift and the
 cumulative lift per quantile.}
 
-\item{type}{A string (default = "obs"). The column's name of the observed
-class.}
+\item{type}{A string (default = "gain_chart"). The type of plot. One of:
+"gain_chart", "lift_curve" or "cumulative_lift_curve".}
 
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}
