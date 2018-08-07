@@ -139,8 +139,6 @@ draw_metrics <- function(
   data,
   metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1")
 ) {
-  metric <- match.arg(metric)
-
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
   }
