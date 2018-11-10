@@ -9,8 +9,8 @@ This package implements a consistent interface to compute metrics for classifica
 To install the package, simply run the following from an R console:
 
 ```r
-# install.packages("devtools")
-devtools::install_github("thoera/metrics")
+# install.packages("remotes")
+remotes::install_github("thoera/metrics")
 ```
 
 ## Usage
