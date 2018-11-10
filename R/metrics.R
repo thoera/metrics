@@ -4,8 +4,8 @@
 #'
 #' @param data A dataframe with the probabilities computed for the positive
 #'   class.
-#' @param threshold A numeric value (default = 0.5) to decide if an observation
-#'   will be affected in the positive class.
+#' @param threshold A numeric value (default = 0.5) to decide in which class
+#'   the observations belong.
 #' @param pos_class_col A string (default = "Yes"). The column's name of the
 #'   predicted probabilities.
 #' @param pos_class A string (default = "Yes"). How the positive class is coded.
@@ -111,7 +111,7 @@ compute_optimal_threshold <- function(data, metric = c("Accuracy", "F1")) {
 #' Find the threshold(s) for a given objective and a given metric.
 #'
 #' @param data A dataframe with the metrics computed for different thresholds.
-#' @param metric A string. The metric to consider. One of: "Accuracy",
+#' @param metric A string. The metric to optimize for. One of: "Accuracy",
 #'   "Precision", "Recall", "Specificity", "NPV" or "F1".
 #' @param objective A numeric value. The objective to reach.
 #' @return A dataframe with the optimal threshold(s).
@@ -129,12 +129,13 @@ objective_threshold <- function(data, metric, objective) {
 #' Plot the selected metrics.
 #'
 #' @param data A dataframe or a list of dataframes with the metrics computed.
-#' @param metric A string or a vector of string. The metric(s) to plot.
+#' @param metric A string or a vector of strings. The metric(s) to plot.
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_metrics <- function(
   data,
   metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1")
@@ -157,11 +158,11 @@ draw_metrics <- function(
   data_lg <- data_lg[data_lg[["metrics"]] %in% metric, ]
 
   ggplot2::ggplot(data_lg,
-                  ggplot2::aes_string(x = "threshold",
-                                      y = "value",
-                                      colour = "metrics")) +
+                  ggplot2::aes(x = .data[["threshold"]],
+                               y = .data[["value"]],
+                               color = .data[["metrics"]])) +
     ggplot2::geom_line(size = 0.8, na.rm = TRUE) +
-    ggplot2::labs(title = "Metrics", x = "threshold", y = "value") +
+    ggplot2::labs(title = "Metrics", x = "Threshold", y = "Value", color = "") +
     # use facets if 'data' is a list
     {if (!inherits(data, "data.frame")) ggplot2::facet_wrap(~ set)}
 }
@@ -172,15 +173,15 @@ draw_metrics <- function(
 #'
 #' @param data A dataframe or a list of dataframes with the recall and the
 #'   specificity.
-#' @param recall A string (default = "Recall"). The column's name of the
-#'   computed recall.
+#' @param recall A string (default = "Recall"). The column's name of the recall.
 #' @param specificity A string (default = "Specificity"). The column's name of
-#'   the computed specificity.
+#'   the specificity.
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
@@ -192,8 +193,8 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
     data <- data[, c(recall, specificity)]
 
     g <- ggplot2::ggplot(data,
-                         ggplot2::aes_(x = quote(1 - Specificity),
-                                       y = quote(Recall))) +
+                         ggplot2::aes(x = 1 - .data[["Specificity"]],
+                                      y = .data[["Recall"]])) +
       ggplot2::geom_segment(ggplot2::aes(x = 0, y = 0, xend = 1, yend = 1),
                             linetype = "longdash", color = "grey70") +
       ggplot2::geom_line(color = "#f8766d", size = 0.8)
@@ -203,11 +204,11 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
     data <- data.table::rbindlist(data, idcol = "set")
 
     g <- ggplot2::ggplot(data,
-                         ggplot2::aes_(x = quote(1 - Specificity),
-                                       y = quote(Recall))) +
+                         ggplot2::aes(x = 1 - .data[["Specificity"]],
+                                      y = .data[["Recall"]])) +
       ggplot2::geom_segment(ggplot2::aes(x = 0, y = 0, xend = 1, yend = 1),
                             linetype = "longdash", color = "grey70") +
-      ggplot2::geom_line(ggplot2::aes_string(color = "set"), size = 0.8)
+      ggplot2::geom_line(ggplot2::aes(color = .data[["set"]]), size = 0.8)
   }
 
   g + ggplot2::labs(title = "ROC curve",
@@ -318,6 +319,7 @@ compute_lift <- function(
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_lift <- function(
   data,
   type = c("gain_chart", "lift_curve", "cumulative_lift_curve"),
@@ -339,17 +341,19 @@ draw_lift <- function(
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift_per),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["cumulative_lift_per"]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift_per))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["cumulative_lift_per"]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
-      ggplot2::geom_line(ggplot2::aes_(y = quote(cumulative_lift_per_ideal)),
+      ggplot2::geom_line(ggplot2::aes(y = .data[["cumulative_lift_per_ideal"]]),
                          size = 0.8, linetype = "longdash", color = "grey70") +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
@@ -365,13 +369,15 @@ draw_lift <- function(
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(lift),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["lift"]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(lift))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["lift"]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
@@ -386,13 +392,15 @@ draw_lift <- function(
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["cumulative_lift"]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[["quantile"]] * 0.05,
+                                        y = .data[["cumulative_lift"]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +

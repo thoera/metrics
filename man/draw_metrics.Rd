@@ -10,7 +10,7 @@ draw_metrics(data, metric = c("Accuracy", "Precision", "Recall",
 \arguments{
 \item{data}{A dataframe or a list of dataframes with the metrics computed.}
 
-\item{metric}{A string or a vector of string. The metric(s) to plot.}
+\item{metric}{A string or a vector of strings. The metric(s) to plot.}
 }
 \value{
 A ggplot2 object.
