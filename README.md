@@ -35,7 +35,7 @@ predictions <- data.frame(
   prob = predict(lr, abalone, type = "response")
 )
 
-# comput the metrics for a given threshold
+# compute the metrics for a given threshold
 compute_metrics(predictions, threshold = 0.3)
 
 # compute the metrics for a sequence of thresholds
