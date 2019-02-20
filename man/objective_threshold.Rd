@@ -9,7 +9,7 @@ objective_threshold(data, metric, objective)
 \arguments{
 \item{data}{A dataframe with the metrics computed for different thresholds.}
 
-\item{metric}{A string. The metric to optimize for. One of: "Accuracy",
+\item{metric}{A string. The metric to consider. One of: "Accuracy",
 "Precision", "Recall", "Specificity", "NPV" or "F1".}
 
 \item{objective}{A numeric value. The objective to reach.}

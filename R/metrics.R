@@ -23,10 +23,8 @@ compute_predict_class <- function(
   pos_class = "Yes",
   neg_class = "No"
 ) {
-  data[["pred"]] <- ifelse(data[[pos_class_col]] > threshold,
-                           pos_class, neg_class)
-  data[["pred"]] <- factor(data[["pred"]],
-                           levels = c(pos_class, neg_class),
+  data[["pred"]] <- factor(data[[pos_class_col]] > threshold,
+                           levels = c(TRUE, FALSE),
                            labels = c(pos_class, neg_class))
   return(data)
 }
@@ -59,31 +57,34 @@ compute_metrics <- function(
   names(metrics) <- c("Accuracy", "Precision", "Recall",
                       "Specificity", "NPV", "F1")
 
+  # True Positives (TP)
+  TP <- sum(data[[pred]] == pos_class & data[[obs]] == pos_class)
+
+  # False Positives (FP)
+  FP <- sum(data[[pred]] == pos_class & data[[obs]] == neg_class)
+
+  # True Negatives (TN)
+  TN <- sum(data[[pred]] == neg_class & data[[obs]] == neg_class)
+
+  # False Negatives (FN)
+  FN <- sum(data[[pred]] == neg_class & data[[obs]] == pos_class)
+
   # accuracy: (TP + TN) / (TP + FP + TN + FN)
-  metrics[["Accuracy"]] <- sum(data[[pred]] == data[[obs]]) / nrow(data)
+  metrics[["Accuracy"]] <- (TP + TN) / nrow(data)
 
   # precision: TP / (TP + FP)
-  metrics[["Precision"]] <- sum(data[[pred]] == pos_class &
-                                  data[[obs]] == pos_class) /
-    sum(data[[pred]] == pos_class)
+  metrics[["Precision"]] <- TP / (TP + FP)
 
   # recall: TP / (TP + FN)
-  metrics[["Recall"]] <- sum(data[[pred]] == pos_class &
-                               data[[obs]] == pos_class) /
-    sum(data[[obs]] == pos_class)
+  metrics[["Recall"]] <- TP / (TP + FN)
 
   # specifity: TN / (TN + FP)
-  metrics[["Specificity"]] <- sum(data[[pred]] == neg_class &
-                                    data[[obs]] == neg_class) /
-    sum(data[[obs]] == neg_class)
+  metrics[["Specificity"]] <- TN / (TN + FP)
 
   # negative predictive value (NPV): TN / (TN + FN)
-  metrics[["NPV"]] <- sum(data[[pred]] == neg_class &
-                            data[[obs]] == neg_class) /
-    sum(data[[pred]] == neg_class)
+  metrics[["NPV"]] <- TN / (TN + FN)
 
-  # F1 score: 2 * TP / (2 * TP + FP + FN)
-  # or precision * recall / (precision + recall)
+  # F1 score: 2 * precision * recall / (precision + recall)
   metrics[["F1"]] <- 2 * metrics[["Precision"]] * metrics[["Recall"]] /
     (metrics[["Precision"]] + metrics[["Recall"]])
 
@@ -130,14 +131,18 @@ objective_threshold <- function(data, metric, objective) {
 #'
 #' @param data A dataframe or a list of dataframes with the metrics computed.
 #' @param metric A string or a vector of string. The metric(s) to plot.
+#' @param threshold A string (default = "pred"). The column's name of the
+#'   threshold.
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_metrics <- function(
   data,
-  metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1")
+  metric = c("Accuracy", "Precision", "Recall", "Specificity", "NPV", "F1"),
+  threshold = "threshold"
 ) {
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
@@ -145,7 +150,7 @@ draw_metrics <- function(
 
   # check if 'data' is a list of dataframes or not and reshape to long format
   if (inherits(data, "data.frame")) {
-    data_lg <- data.table::melt(data, id = "threshold", variable = "metrics")
+    data_lg <- data.table::melt(data, id = threshold, variable = "metrics")
   } else {
     data_lg <- lapply(data, function(x) {
       data.table::melt(x, id = "threshold", variable = "metrics")
@@ -157,11 +162,11 @@ draw_metrics <- function(
   data_lg <- data_lg[data_lg[["metrics"]] %in% metric, ]
 
   ggplot2::ggplot(data_lg,
-                  ggplot2::aes_string(x = "threshold",
-                                      y = "value",
-                                      colour = "metrics")) +
+                  ggplot2::aes(x = .data[[threshold]],
+                               y = .data[["value"]],
+                               color = .data[["metrics"]])) +
     ggplot2::geom_line(size = 0.8, na.rm = TRUE) +
-    ggplot2::labs(title = "Metrics", x = "threshold", y = "value") +
+    ggplot2::labs(title = "Metrics", x = "threshold", y = "value", color = "") +
     # use facets if 'data' is a list
     {if (!inherits(data, "data.frame")) ggplot2::facet_wrap(~ set)}
 }
@@ -181,6 +186,7 @@ draw_metrics <- function(
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
   if (!is.list(data)) {
     stop("'data' must be a list or a data frame")
@@ -189,11 +195,11 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
   # check if 'data' is a list of dataframes or not, select the columns,
   # reshape the data and plot it
   if (inherits(data, "data.frame")) {
-    data <- data[, c(recall, specificity)]
+    # data <- data[, c(recall, specificity)]
 
     g <- ggplot2::ggplot(data,
-                         ggplot2::aes_(x = quote(1 - Specificity),
-                                       y = quote(Recall))) +
+                         ggplot2::aes(x = 1 - .data[[specificity]],
+                                      y = .data[[recall]])) +
       ggplot2::geom_segment(ggplot2::aes(x = 0, y = 0, xend = 1, yend = 1),
                             linetype = "longdash", color = "grey70") +
       ggplot2::geom_line(color = "#f8766d", size = 0.8)
@@ -203,11 +209,11 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
     data <- data.table::rbindlist(data, idcol = "set")
 
     g <- ggplot2::ggplot(data,
-                         ggplot2::aes_(x = quote(1 - Specificity),
-                                       y = quote(Recall))) +
+                         ggplot2::aes(x = 1 - .data[[specificity]],
+                                      y = .data[[recall]])) +
       ggplot2::geom_segment(ggplot2::aes(x = 0, y = 0, xend = 1, yend = 1),
                             linetype = "longdash", color = "grey70") +
-      ggplot2::geom_line(ggplot2::aes_string(color = "set"), size = 0.8)
+      ggplot2::geom_line(ggplot2::aes(color = .data[["set"]]), size = 0.8)
   }
 
   g + ggplot2::labs(title = "ROC curve",
@@ -292,7 +298,6 @@ compute_lift <- function(
   )
 
   data <- rbind(c(0, NA, NA, NA, NA, 0, 0), data)
-
   return(data)
 }
 
@@ -319,6 +324,7 @@ compute_lift <- function(
 #' @examples
 #' # add an example here
 #' @export
+#' @importFrom rlang .data
 draw_lift <- function(
   data,
   type = c("gain_chart", "lift_curve", "cumulative_lift_curve"),
@@ -336,71 +342,78 @@ draw_lift <- function(
 
   # cumulative gain chart
   if (type == "gain_chart") {
-    # check if 'data' is a list and reshape the data
+    # check if 'data' is a list and reshape it
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift_per),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[cumulative_lift_per]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift_per))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[cumulative_lift_per]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
-      ggplot2::geom_line(ggplot2::aes_(y = quote(cumulative_lift_per_ideal)),
+      ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
                          size = 0.8, linetype = "longdash", color = "grey70") +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
       ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative gain chart",
-                    x = "% of population", y = "% of target")
+                    x = "% of population", y = "% of target", group = "")
   }
 
   # lift curve
   if (type == "lift_curve") {
-    # check if 'data' is a list and reshape the data
+    # check if 'data' is a list and reshape it
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(lift),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[lift]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(lift))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[lift]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
-      ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift")
+      ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift",
+                    group = "")
   }
 
   # cumulative lift curve
   if (type == "cumulative_lift_curve") {
-    # check if 'data' is a list and reshape the data
+    # check if 'data' is a list and reshape it
     if (inherits(data, "list")) {
       data <- data.table::rbindlist(data, idcol = "group")
 
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift),
-                                               color = quote(group))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[cumulative_lift]],
+                                        color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
-      g <- ggplot2::ggplot(data, ggplot2::aes_(x = quote(quantile * 0.05),
-                                               y = quote(cumulative_lift))) +
+      g <- ggplot2::ggplot(data,
+                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                                        y = .data[[cumulative_lift]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative lift curve",
-                    x = "% of population", y = "Lift")
+                    x = "% of population", y = "Lift", group = "")
   }
   return(g)
 }

@@ -1,6 +1,6 @@
 Package: metrics
 Title: Metrics for Classification Tasks
-Version: 0.1.1.9000
+Version: 0.2.0.9000
 Authors@R: person("Thomas", "Erard", email = "erard.thomas@gmail.com", role = c("aut", "cre"))
 URL: https://github.com/thoera/metrics
 BugReports: https://github.com/thoera/metrics/issues

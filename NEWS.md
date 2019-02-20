@@ -1,3 +1,10 @@
+# metrics 0.2.0.9000
+
+## Improvements
+
+* use a more modern way to deal with NSE in `ggplot2`
+* add the argument 'threshold' to `draw_metrics()`
+
 # metrics 0.1.0.9000
 
 ## New features

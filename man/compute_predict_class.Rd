@@ -11,8 +11,8 @@ compute_predict_class(data, threshold = 0.5, pos_class_col = "Yes",
 \item{data}{A dataframe with the probabilities computed for the positive
 class.}
 
-\item{threshold}{A numeric value (default = 0.5) to decide in which class
-the observations belong.}
+\item{threshold}{A numeric value (default = 0.5) to decide if an observation
+will be affected in the positive class.}
 
 \item{pos_class_col}{A string (default = "Yes"). The column's name of the
 predicted probabilities.}

@@ -10,10 +10,11 @@ draw_roc(data, recall = "Recall", specificity = "Specificity")
 \item{data}{A dataframe or a list of dataframes with the recall and the
 specificity.}
 
-\item{recall}{A string (default = "Recall"). The column's name of the recall.}
+\item{recall}{A string (default = "Recall"). The column's name of the
+computed recall.}
 
 \item{specificity}{A string (default = "Specificity"). The column's name of
-the specificity.}
+the computed specificity.}
 }
 \value{
 A ggplot2 object.

@@ -5,12 +5,15 @@
 \title{Plot the selected metrics}
 \usage{
 draw_metrics(data, metric = c("Accuracy", "Precision", "Recall",
-  "Specificity", "NPV", "F1"))
+  "Specificity", "NPV", "F1"), threshold = "threshold")
 }
 \arguments{
 \item{data}{A dataframe or a list of dataframes with the metrics computed.}
 
-\item{metric}{A string or a vector of strings. The metric(s) to plot.}
+\item{metric}{A string or a vector of string. The metric(s) to plot.}
+
+\item{threshold}{A string (default = "pred"). The column's name of the
+threshold.}
 }
 \value{
 A ggplot2 object.
