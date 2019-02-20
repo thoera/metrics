@@ -4,12 +4,12 @@
 \alias{qcut}
 \title{Compute the quantiles}
 \usage{
-qcut(data, pos_class_col = "Yes", n = 20L)
+qcut(data, prob = "prob", n = 20L)
 }
 \arguments{
 \item{data}{A dataframe with the probabilities for the positive class.}
 
-\item{pos_class_col}{A string (default = "Yes"). The column's name of the
+\item{prob}{A string (default = "prob"). The column's name of the
 predicted probabilities.}
 
 \item{n}{A numeric value (default = 20). The number of quantiles to compute.}
@@ -23,11 +23,11 @@ Compute the quantiles.
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-quantiles <- qcut(data, pos_class_col = "Yes")
+quantiles <- qcut(data, prob = "prob")
 }
 \seealso{
 \code{\link{compute_lift}}, \code{\link{draw_lift}}

@@ -29,11 +29,11 @@ Compute the lift and cumulative lift.
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-quantiles <- qcut(data, pos_class_col = "Yes")
+quantiles <- qcut(data, prob = "prob")
 lift <- compute_lift(quantiles)
 }
 \seealso{

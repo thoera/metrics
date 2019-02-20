@@ -5,31 +5,31 @@
 #' @param data A dataframe with the probabilities computed for the positive
 #'   class.
 #' @param threshold A numeric value (default = 0.5) to decide if an observation
-#'   will be affected in the positive class.
-#' @param pos_class_col A string (default = "Yes"). The column's name of the
+#'   will be affected to the positive class.
+#' @param prob A string (default = "prob"). The column's name of the
 #'   predicted probabilities.
 #' @param pos_class A string (default = "Yes"). How the positive class is coded.
 #' @param neg_class A string (default = "No"). How the negative class is coded.
-#' @return A dataframe with class predicted.
+#' @return A dataframe with the class predicted.
 #' @seealso \code{\link{compute_metrics}},
 #'   \code{\link{compute_optimal_threshold}}, \code{\link{objective_threshold}}
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' compute_predict_class(data, pos_class_col = "Yes")
+#' compute_predict_class(data)
 #' @export
 compute_predict_class <- function(
   data,
   threshold = 0.5,
-  pos_class_col = "Yes",
+  prob = "prob",
   pos_class = "Yes",
   neg_class = "No"
 ) {
-  data[["pred"]] <- factor(data[[pos_class_col]] > threshold,
+  data[["pred"]] <- factor(data[[prob]] > threshold,
                            levels = c(TRUE, FALSE),
                            labels = c(pos_class, neg_class))
   return(data)
@@ -40,10 +40,12 @@ compute_predict_class <- function(
 #' Compute the following metrics: "Accuracy", "Precision", "Recall",
 #' "Specificity", "NPV" and "F1".
 #' @param data A dataframe with the observed and the predicted class.
+#' @param threshold A numerical value or a sequence of numerical values (default
+#'   = 0.5). The threshold(s) to compute the metrics.
 #' @param obs A string (default = "obs"). The column's name of the observed
 #'   class.
-#' @param pred A string (default = "pred"). The column's name of the predicted
-#'   class.
+#' @param prob A string (default = "prob"). The column's name of the predicted
+#'   probabilities.
 #' @param pos_class A string (default = "Yes"). How the positive class is coded.
 #' @param neg_class A string (default = "No"). How the negative class is coded.
 #' @return A dataframe with the computed metrics.
@@ -52,57 +54,86 @@ compute_predict_class <- function(
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' predict_class <- compute_predict_class(data, pos_class_col = "Yes")
-#'
-#' compute_metrics(predict_class)
+#' compute_metrics(data, threshold = 0.5)
+#' compute_metrics(data, threshold = seq(0, 1, 0.1))
 #' @export
 compute_metrics <- function(
   data,
+  threshold = 0.5,
   obs = "obs",
-  pred = "pred",
+  prob = "prob",
   pos_class = "Yes",
   neg_class = "No"
 ) {
-  metrics <- vector("list", 6L)
-  names(metrics) <- c("Accuracy", "Precision", "Recall",
-                      "Specificity", "NPV", "F1")
+  metrics_ <- function(data = data, obs = obs,
+                       pos_class = pos_class, neg_class = neg_class) {
+    metrics <- vector("list", 6L)
+    names(metrics) <- c("Accuracy", "Precision", "Recall",
+                        "Specificity", "NPV", "F1")
 
-  # True Positives (TP)
-  TP <- sum(data[[pred]] == pos_class & data[[obs]] == pos_class)
+    # True Positives (TP)
+    TP <- sum(data[["pred"]] == pos_class & data[[obs]] == pos_class)
 
-  # False Positives (FP)
-  FP <- sum(data[[pred]] == pos_class & data[[obs]] == neg_class)
+    # False Positives (FP)
+    FP <- sum(data[["pred"]] == pos_class & data[[obs]] == neg_class)
 
-  # True Negatives (TN)
-  TN <- sum(data[[pred]] == neg_class & data[[obs]] == neg_class)
+    # True Negatives (TN)
+    TN <- sum(data[["pred"]] == neg_class & data[[obs]] == neg_class)
 
-  # False Negatives (FN)
-  FN <- sum(data[[pred]] == neg_class & data[[obs]] == pos_class)
+    # False Negatives (FN)
+    FN <- sum(data[["pred"]] == neg_class & data[[obs]] == pos_class)
 
-  # accuracy: (TP + TN) / (TP + FP + TN + FN)
-  metrics[["Accuracy"]] <- (TP + TN) / nrow(data)
+    # accuracy: (TP + TN) / (TP + FP + TN + FN)
+    metrics[["Accuracy"]] <- (TP + TN) / nrow(data)
 
-  # precision: TP / (TP + FP)
-  metrics[["Precision"]] <- TP / (TP + FP)
+    # precision: TP / (TP + FP)
+    metrics[["Precision"]] <- TP / (TP + FP)
 
-  # recall: TP / (TP + FN)
-  metrics[["Recall"]] <- TP / (TP + FN)
+    # recall: TP / (TP + FN)
+    metrics[["Recall"]] <- TP / (TP + FN)
 
-  # specifity: TN / (TN + FP)
-  metrics[["Specificity"]] <- TN / (TN + FP)
+    # specifity: TN / (TN + FP)
+    metrics[["Specificity"]] <- TN / (TN + FP)
 
-  # negative predictive value (NPV): TN / (TN + FN)
-  metrics[["NPV"]] <- TN / (TN + FN)
+    # negative predictive value (NPV): TN / (TN + FN)
+    metrics[["NPV"]] <- TN / (TN + FN)
 
-  # F1 score: 2 * precision * recall / (precision + recall)
-  metrics[["F1"]] <- 2 * metrics[["Precision"]] * metrics[["Recall"]] /
-    (metrics[["Precision"]] + metrics[["Recall"]])
+    # F1 score: 2 * precision * recall / (precision + recall)
+    metrics[["F1"]] <- 2 * metrics[["Precision"]] * metrics[["Recall"]] /
+      (metrics[["Precision"]] + metrics[["Recall"]])
 
-  return(metrics)
+    return(metrics)
+  }
+
+  if (length(threshold) == 1) {
+    data <- compute_predict_class(data = data,
+                                  threshold = threshold, prob = prob,
+                                  pos_class = pos_class, neg_class = neg_class)
+    return(
+      data.frame(
+        metrics_(data = data, obs = obs,
+                 pos_class = pos_class, neg_class = neg_class),
+        threshold = threshold
+      )
+    )
+  } else {
+    data <- lapply(threshold, function(t) {
+      compute_predict_class(data = data,
+                            threshold = t, prob = prob,
+                            pos_class = pos_class, neg_class = neg_class)
+    })
+    result <- data.table::setDF(
+      data.table::rbindlist(
+        lapply(data, metrics_, obs = obs,
+               pos_class = pos_class, neg_class = neg_class)
+      )
+    )
+    return(cbind(result, threshold = threshold))
+  }
 }
 
 #' Compute the optimal threshold for the accuracy or the F1-score
@@ -110,27 +141,18 @@ compute_metrics <- function(
 #' Compute the optimal threshold for the accuracy or the F1-score.
 #'
 #' @param data A dataframe with the metrics computed for different thresholds.
-#' @param metric A string. The metric to maximize. One of "Accuracy" or "F1".
+#' @param metric A string. The metric to maximize. One of: "Accuracy" or "F1".
 #' @return A dataframe with the optimal threshold(s).
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}},
 #'   \code{\link{objective_threshold}}
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
-#'   compute_predict_class(data, threshold = threshold)
-#' })
-#'
-#' metrics <- data.table::setDF(
-#'   data.table::rbindlist(
-#'     lapply(predict_class, compute_metrics)
-#'   )
-#' )
-#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#' metrics <- compute_metrics(data, threshold = c(0.3, 0.7, 0.2))
 #'
 #' compute_optimal_threshold(metrics, metric = "F1")
 #' @export
@@ -152,20 +174,11 @@ compute_optimal_threshold <- function(data, metric = c("Accuracy", "F1")) {
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
-#'   compute_predict_class(data, threshold = threshold)
-#' })
-#'
-#' metrics <- data.table::setDF(
-#'   data.table::rbindlist(
-#'     lapply(predict_class, compute_metrics)
-#'   )
-#' )
-#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#' metrics <- compute_metrics(data, threshold = c(0.3, 0.7, 0.2))
 #'
 #' objective_threshold(metrics, metric = "Precision", objective = 0.75)
 #' @export
@@ -179,27 +192,18 @@ objective_threshold <- function(data, metric, objective) {
 #'
 #' @param data A dataframe or a list of dataframes with the metrics computed.
 #' @param metric A string or a vector of string. The metric(s) to plot.
-#' @param threshold A string (default = "pred"). The column's name of the
+#' @param threshold A string (default = "threshold"). The column's name of the
 #'   threshold.
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
-#'   compute_predict_class(data, threshold = threshold)
-#' })
-#'
-#' metrics <- data.table::setDF(
-#'   data.table::rbindlist(
-#'     lapply(predict_class, compute_metrics)
-#'   )
-#' )
-#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#' metrics <- compute_metrics(data, threshold = c(0.3, 0.7, 0.2))
 #'
 #' draw_metrics(metrics)
 #' @export
@@ -231,7 +235,7 @@ draw_metrics <- function(
                                y = .data[["value"]],
                                color = .data[["metrics"]])) +
     ggplot2::geom_line(size = 0.8, na.rm = TRUE) +
-    ggplot2::labs(title = "Metrics", x = "threshold", y = "value", color = "") +
+    ggplot2::labs(title = "Metrics", x = "Threshold", y = "Value", color = "") +
     # use facets if 'data' is a list
     {if (!inherits(data, "data.frame")) ggplot2::facet_wrap(~ set)}
 }
@@ -251,20 +255,11 @@ draw_metrics <- function(
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
-#'   compute_predict_class(data, threshold = threshold)
-#' })
-#'
-#' metrics <- data.table::setDF(
-#'   data.table::rbindlist(
-#'     lapply(predict_class, compute_metrics)
-#'   )
-#' )
-#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#' metrics <- compute_metrics(data, threshold = c(0.3, 0.7, 0.2))
 #'
 #' draw_roc(metrics)
 #' @export
@@ -309,7 +304,7 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' Compute the quantiles.
 #'
 #' @param data A dataframe with the probabilities for the positive class.
-#' @param pos_class_col A string (default = "Yes"). The column's name of the
+#' @param prob A string (default = "prob"). The column's name of the
 #'   predicted probabilities.
 #' @param n A numeric value (default = 20). The number of quantiles to compute.
 #' @return A dataframe with the quantiles computed.
@@ -317,16 +312,16 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' quantiles <- qcut(data, pos_class_col = "Yes")
+#' quantiles <- qcut(data, prob = "prob")
 #' @export
-qcut <- function(data, pos_class_col = "Yes", n = 20L) {
+qcut <- function(data, prob = "prob", n = 20L) {
   data[["quantile"]] <- (n + 1L) - findInterval(
-    data[[pos_class_col]],
-    stats::quantile(data[[pos_class_col]], seq(0L, 1L, length = n + 1L)),
+    data[[prob]],
+    stats::quantile(data[[prob]], seq(0L, 1L, length = n + 1L)),
     all.inside = TRUE
   )
   return(data)
@@ -349,11 +344,11 @@ qcut <- function(data, pos_class_col = "Yes", n = 20L) {
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' quantiles <- qcut(data, pos_class_col = "Yes")
+#' quantiles <- qcut(data, prob = "prob")
 #' lift <- compute_lift(quantiles)
 #' @export
 compute_lift <- function(
@@ -402,8 +397,8 @@ compute_lift <- function(
 #'
 #' @param data A dataframe or a list of dataframes with the lift and the
 #'   cumulative lift per quantile.
-#' @param type A string (default = "obs"). The column's name of the observed
-#'   class.
+#' @param type A string (default = "gain_chart"). The type of plot. One of:
+#'   "gain_chart", "lift_curve" or "cumulative_lift_curve".
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
 #' @param lift A string (default = "lift"). The column's name of the lift
@@ -419,11 +414,11 @@ compute_lift <- function(
 #' @examples
 #' data <- data.frame(
 #'   obs = c(rep("Yes", 20), rep("No", 20)),
-#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-#'           runif(n = 20, min = 0.1, max = 0.6))
+#'   prob = c(runif(n = 20, min = 0.3, max = 0.8),
+#'            runif(n = 20, min = 0.1, max = 0.6))
 #' )
 #'
-#' quantiles <- qcut(data, pos_class_col = "Yes")
+#' quantiles <- qcut(data, prob = "prob")
 #' lift <- compute_lift(quantiles)
 #'
 #' draw_lift(lift)
@@ -454,16 +449,20 @@ draw_lift <- function(
                            ggplot2::aes(x = .data[[quantile]] * 0.05,
                                         y = .data[[cumulative_lift_per]],
                                         color = .data[["group"]])) +
+        ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
+                           size = 0.8, linetype = "longdash",
+                           color = "grey70") +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
       g <- ggplot2::ggplot(data,
                            ggplot2::aes(x = .data[[quantile]] * 0.05,
                                         y = .data[[cumulative_lift_per]])) +
+        ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
+                           size = 0.8, linetype = "longdash",
+                           color = "grey70") +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
     g <- g +
-      ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
-                         size = 0.8, linetype = "longdash", color = "grey70") +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
       ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
@@ -492,8 +491,8 @@ draw_lift <- function(
     g <- g +
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
-      ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift",
-                    color = "")
+      ggplot2::labs(title = "Lift curve",
+                    x = "% of population", y = "Lift", color = "")
   }
 
   # cumulative lift curve
@@ -517,7 +516,7 @@ draw_lift <- function(
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative lift curve",
-                    x = "% of population", y = "Lift", color = "")
+                    x = "% of population", y = "Cumulative lift", color = "")
   }
   return(g)
 }

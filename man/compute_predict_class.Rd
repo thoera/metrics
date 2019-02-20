@@ -4,7 +4,7 @@
 \alias{compute_predict_class}
 \title{Compute the class predicted for a given threshold}
 \usage{
-compute_predict_class(data, threshold = 0.5, pos_class_col = "Yes",
+compute_predict_class(data, threshold = 0.5, prob = "prob",
   pos_class = "Yes", neg_class = "No")
 }
 \arguments{
@@ -12,9 +12,9 @@ compute_predict_class(data, threshold = 0.5, pos_class_col = "Yes",
 class.}
 
 \item{threshold}{A numeric value (default = 0.5) to decide if an observation
-will be affected in the positive class.}
+will be affected to the positive class.}
 
-\item{pos_class_col}{A string (default = "Yes"). The column's name of the
+\item{prob}{A string (default = "prob"). The column's name of the
 predicted probabilities.}
 
 \item{pos_class}{A string (default = "Yes"). How the positive class is coded.}
@@ -22,7 +22,7 @@ predicted probabilities.}
 \item{neg_class}{A string (default = "No"). How the negative class is coded.}
 }
 \value{
-A dataframe with class predicted.
+A dataframe with the class predicted.
 }
 \description{
 Compute the class predicted for a given threshold.
@@ -30,11 +30,11 @@ Compute the class predicted for a given threshold.
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-compute_predict_class(data, pos_class_col = "Yes")
+compute_predict_class(data)
 }
 \seealso{
 \code{\link{compute_metrics}},

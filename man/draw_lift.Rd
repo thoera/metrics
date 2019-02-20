@@ -14,8 +14,8 @@ draw_lift(data, type = c("gain_chart", "lift_curve",
 \item{data}{A dataframe or a list of dataframes with the lift and the
 cumulative lift per quantile.}
 
-\item{type}{A string (default = "obs"). The column's name of the observed
-class.}
+\item{type}{A string (default = "gain_chart"). The type of plot. One of:
+"gain_chart", "lift_curve" or "cumulative_lift_curve".}
 
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}
@@ -41,11 +41,11 @@ Plot the lift curves.
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-quantiles <- qcut(data, pos_class_col = "Yes")
+quantiles <- qcut(data, prob = "prob")
 lift <- compute_lift(quantiles)
 
 draw_lift(lift)

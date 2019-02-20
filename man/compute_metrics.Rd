@@ -4,17 +4,20 @@
 \alias{compute_metrics}
 \title{Compute several metrics for classification tasks.}
 \usage{
-compute_metrics(data, obs = "obs", pred = "pred", pos_class = "Yes",
-  neg_class = "No")
+compute_metrics(data, threshold = 0.5, obs = "obs", prob = "prob",
+  pos_class = "Yes", neg_class = "No")
 }
 \arguments{
 \item{data}{A dataframe with the observed and the predicted class.}
 
+\item{threshold}{A numerical value or a sequence of numerical values (default
+= 0.5). The threshold(s) to compute the metrics.}
+
 \item{obs}{A string (default = "obs"). The column's name of the observed
 class.}
 
-\item{pred}{A string (default = "pred"). The column's name of the predicted
-class.}
+\item{prob}{A string (default = "prob"). The column's name of the predicted
+probabilities.}
 
 \item{pos_class}{A string (default = "Yes"). How the positive class is coded.}
 
@@ -30,13 +33,12 @@ Compute the following metrics: "Accuracy", "Precision", "Recall",
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-predict_class <- compute_predict_class(data, pos_class_col = "Yes")
-
-compute_metrics(predict_class)
+compute_metrics(data, threshold = 0.5)
+compute_metrics(data, threshold = seq(0, 1, 0.1))
 }
 \seealso{
 \code{\link{compute_predict_class}},

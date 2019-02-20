@@ -23,20 +23,11 @@ Find the threshold(s) for a given objective and a given metric.
 \examples{
 data <- data.frame(
   obs = c(rep("Yes", 20), rep("No", 20)),
-  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
-          runif(n = 20, min = 0.1, max = 0.6))
+  prob = c(runif(n = 20, min = 0.3, max = 0.8),
+           runif(n = 20, min = 0.1, max = 0.6))
 )
 
-predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
-  compute_predict_class(data, threshold = threshold)
-})
-
-metrics <- data.table::setDF(
-  data.table::rbindlist(
-    lapply(predict_class, compute_metrics)
-  )
-)
-metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+metrics <- compute_metrics(data, threshold = c(0.3, 0.7, 0.2))
 
 objective_threshold(metrics, metric = "Precision", objective = 0.75)
 }

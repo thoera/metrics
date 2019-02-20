@@ -30,25 +30,16 @@ abalone$Class <- factor(abalone$Class,
 lr <- glm(Class ~ ., family = "binomial", data = abalone)
 
 # compute the predictions
-predict_proba <- data.frame(
+predictions <- data.frame(
   obs = abalone$Class,
-  Yes = predict(lr, abalone, type = "response")
+  prob = predict(lr, abalone, type = "response")
 )
 
-# compute the class predicted for a list of thresholds
-predict_class <- lapply(seq(0, 1, 0.01), function(threshold) {
-  compute_predict_class(data = predict_proba, threshold = threshold)
-})
+# comput the metrics for a given threshold
+compute_metrics(predictions, threshold = 0.3)
 
-# compute the metrics for each threshold and bind the results in a dataframe
-metrics <- data.table::setDF(
-  data.table::rbindlist(
-    lapply(predict_class, compute_metrics)
-  )
-)
-
-# add the thresholds
-metrics[["threshold"]] <- seq(0, 1, 1 / (nrow(metrics) - 1L))
+# compute the metrics for a sequence of thresholds
+metrics <- compute_metrics(predictions, threshold = seq(0, 1, 0.01))
 
 # find the optimal threshold for the F1-Score
 compute_optimal_threshold(metrics, metric = "F1")
@@ -66,7 +57,7 @@ draw_metrics(metrics, metric = c("Precision", "Recall"))
 draw_roc(metrics)
 
 # compute the lift
-quantiles <- qcut(predict_proba)
+quantiles <- qcut(predictions)
 lift <- compute_lift(quantiles)
 
 # plot the "gain chart"
