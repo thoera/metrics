@@ -365,7 +365,7 @@ draw_lift <- function(
       ggplot2::scale_y_continuous(breaks = seq(0, 1, 0.2), limits = c(0, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative gain chart",
-                    x = "% of population", y = "% of target", group = "")
+                    x = "% of population", y = "% of target", color = "")
   }
 
   # lift curve
@@ -389,7 +389,7 @@ draw_lift <- function(
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Lift curve", x = "% of population", y = "Lift",
-                    group = "")
+                    color = "")
   }
 
   # cumulative lift curve
@@ -413,7 +413,7 @@ draw_lift <- function(
       ggplot2::scale_x_continuous(breaks = seq(0, 1, 0.2), limits = c(0.05, 1),
                                   labels = scales::percent) +
       ggplot2::labs(title = "Cumulative lift curve",
-                    x = "% of population", y = "Lift", group = "")
+                    x = "% of population", y = "Lift", color = "")
   }
   return(g)
 }
