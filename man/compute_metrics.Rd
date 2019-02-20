@@ -28,7 +28,15 @@ Compute the following metrics: "Accuracy", "Precision", "Recall",
 "Specificity", "NPV" and "F1".
 }
 \examples{
-# add an example here
+data <- data.frame(
+  obs = c(rep("Yes", 20), rep("No", 20)),
+  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+          runif(n = 20, min = 0.1, max = 0.6))
+)
+
+predict_class <- compute_predict_class(data, pos_class_col = "Yes")
+
+compute_metrics(predict_class)
 }
 \seealso{
 \code{\link{compute_predict_class}},

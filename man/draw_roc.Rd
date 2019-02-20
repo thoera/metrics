@@ -23,7 +23,24 @@ A ggplot2 object.
 Plot the ROC curve.
 }
 \examples{
-# add an example here
+data <- data.frame(
+  obs = c(rep("Yes", 20), rep("No", 20)),
+  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+          runif(n = 20, min = 0.1, max = 0.6))
+)
+
+predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
+  compute_predict_class(data, threshold = threshold)
+})
+
+metrics <- data.table::setDF(
+  data.table::rbindlist(
+    lapply(predict_class, compute_metrics)
+  )
+)
+metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+
+draw_roc(metrics)
 }
 \seealso{
 \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}

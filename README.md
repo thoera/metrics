@@ -66,8 +66,8 @@ draw_metrics(metrics, metric = c("Precision", "Recall"))
 draw_roc(metrics)
 
 # compute the lift
-lift <- qcut(predict_proba)
-lift <- compute_lift(lift)
+quantiles <- qcut(predict_proba)
+lift <- compute_lift(quantiles)
 
 # plot the "gain chart"
 draw_lift(lift)

@@ -21,7 +21,13 @@ A dataframe with the quantiles computed.
 Compute the quantiles.
 }
 \examples{
-# add an example here
+data <- data.frame(
+  obs = c(rep("Yes", 20), rep("No", 20)),
+  Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+          runif(n = 20, min = 0.1, max = 0.6))
+)
+
+quantiles <- qcut(data, pos_class_col = "Yes")
 }
 \seealso{
 \code{\link{compute_lift}}, \code{\link{draw_lift}}

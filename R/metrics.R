@@ -14,7 +14,13 @@
 #' @seealso \code{\link{compute_metrics}},
 #'   \code{\link{compute_optimal_threshold}}, \code{\link{objective_threshold}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' compute_predict_class(data, pos_class_col = "Yes")
 #' @export
 compute_predict_class <- function(
   data,
@@ -44,7 +50,15 @@ compute_predict_class <- function(
 #' @seealso \code{\link{compute_predict_class}},
 #'   \code{\link{compute_optimal_threshold}}, \code{\link{objective_threshold}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' predict_class <- compute_predict_class(data, pos_class_col = "Yes")
+#'
+#' compute_metrics(predict_class)
 #' @export
 compute_metrics <- function(
   data,
@@ -101,7 +115,24 @@ compute_metrics <- function(
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}},
 #'   \code{\link{objective_threshold}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
+#'   compute_predict_class(data, threshold = threshold)
+#' })
+#'
+#' metrics <- data.table::setDF(
+#'   data.table::rbindlist(
+#'     lapply(predict_class, compute_metrics)
+#'   )
+#' )
+#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#'
+#' compute_optimal_threshold(metrics, metric = "F1")
 #' @export
 compute_optimal_threshold <- function(data, metric = c("Accuracy", "F1")) {
   metric <- match.arg(metric)
@@ -119,7 +150,24 @@ compute_optimal_threshold <- function(data, metric = c("Accuracy", "F1")) {
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}},
 #'   \code{\link{compute_optimal_threshold}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
+#'   compute_predict_class(data, threshold = threshold)
+#' })
+#'
+#' metrics <- data.table::setDF(
+#'   data.table::rbindlist(
+#'     lapply(predict_class, compute_metrics)
+#'   )
+#' )
+#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#'
+#' objective_threshold(metrics, metric = "Precision", objective = 0.75)
 #' @export
 objective_threshold <- function(data, metric, objective) {
   data[which.min(abs(data[[metric]] - objective)), ]
@@ -136,7 +184,24 @@ objective_threshold <- function(data, metric, objective) {
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
+#'   compute_predict_class(data, threshold = threshold)
+#' })
+#'
+#' metrics <- data.table::setDF(
+#'   data.table::rbindlist(
+#'     lapply(predict_class, compute_metrics)
+#'   )
+#' )
+#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#'
+#' draw_metrics(metrics)
 #' @export
 #' @importFrom rlang .data
 draw_metrics <- function(
@@ -184,7 +249,24 @@ draw_metrics <- function(
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_predict_class}}, \code{\link{compute_metrics}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' predict_class <- lapply(c(0.3, 0.5, 0.7), function(threshold) {
+#'   compute_predict_class(data, threshold = threshold)
+#' })
+#'
+#' metrics <- data.table::setDF(
+#'   data.table::rbindlist(
+#'     lapply(predict_class, compute_metrics)
+#'   )
+#' )
+#' metrics[["threshold"]] <- c(0.3, 0.5, 0.7)
+#'
+#' draw_roc(metrics)
 #' @export
 #' @importFrom rlang .data
 draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
@@ -233,7 +315,13 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' @return A dataframe with the quantiles computed.
 #' @seealso \code{\link{compute_lift}}, \code{\link{draw_lift}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' quantiles <- qcut(data, pos_class_col = "Yes")
 #' @export
 qcut <- function(data, pos_class_col = "Yes", n = 20L) {
   data[["quantile"]] <- (n + 1L) - findInterval(
@@ -259,7 +347,14 @@ qcut <- function(data, pos_class_col = "Yes", n = 20L) {
 #'   quantile.
 #' @seealso \code{\link{compute_lift}}, \code{\link{draw_lift}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' quantiles <- qcut(data, pos_class_col = "Yes")
+#' lift <- compute_lift(quantiles)
 #' @export
 compute_lift <- function(
   data,
@@ -322,7 +417,16 @@ compute_lift <- function(
 #' @return A ggplot2 object.
 #' @seealso \code{\link{compute_lift}}, \code{\link{draw_lift}}
 #' @examples
-#' # add an example here
+#' data <- data.frame(
+#'   obs = c(rep("Yes", 20), rep("No", 20)),
+#'   Yes = c(runif(n = 20, min = 0.3, max = 0.8),
+#'           runif(n = 20, min = 0.1, max = 0.6))
+#' )
+#'
+#' quantiles <- qcut(data, pos_class_col = "Yes")
+#' lift <- compute_lift(quantiles)
+#'
+#' draw_lift(lift)
 #' @export
 #' @importFrom rlang .data
 draw_lift <- function(
