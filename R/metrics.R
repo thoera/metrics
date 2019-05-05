@@ -272,7 +272,12 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
   # check if 'data' is a list of dataframes or not, select the columns,
   # reshape the data and plot it
   if (inherits(data, "data.frame")) {
-    # data <- data[, c(recall, specificity)]
+    data <- data[, c(recall, specificity)]
+
+    # we add a point if needed to have a nice curve
+    if (nrow(data[data[[recall]] == 1 & data[[specificity]] == 0, ]) == 0) {
+      data <- rbind(c(1, 0), data)
+    }
 
     g <- ggplot2::ggplot(data,
                          ggplot2::aes(x = 1 - .data[[specificity]],
@@ -283,6 +288,14 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 
   } else {
     data <- lapply(data, function(x) x[, c(recall, specificity)])
+
+    # we add a point if needed to have a nice curve
+    data[] <- lapply(data, function(x) {
+      if (nrow(x[x[[recall]] == 1 & x[[specificity]] == 0, ]) == 0) {
+        x <- rbind(c(1, 0), x)
+      } else x
+    })
+
     data <- data.table::rbindlist(data, idcol = "set")
 
     g <- ggplot2::ggplot(data,
