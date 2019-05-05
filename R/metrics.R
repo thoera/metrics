@@ -351,6 +351,8 @@ qcut <- function(data, prob = "prob", n = 20L) {
 #' @param pos_class A string (default = "Yes"). How the positive class is coded.
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
+#' @param nb_quantiles A integer (default = 20). The number of quantiles
+#'   computed.
 #' @return A dataframe with the lift and the cumulative lift computed for each
 #'   quantile.
 #' @seealso \code{\link{compute_lift}}, \code{\link{draw_lift}}
@@ -368,17 +370,24 @@ compute_lift <- function(
   data,
   obs = "obs",
   pos_class = "Yes",
-  quantile = "quantile"
+  quantile = "quantile",
+  nb_quantiles = 20
 ) {
   # get the target rate
   target_rate <- sum(data[[obs]] == pos_class) / nrow(data)
 
   # compute the number of targets in each quantile
   data <- as.data.frame(
-    table(quantile = data[[quantile]], obs = data[[obs]])
+    table("quantile" = data[[quantile]], obs = data[[obs]])
   )
   data <- data[data[[obs]] == pos_class, ]
-  data[["quantile"]] <- seq_len(nrow(data))
+
+  # get the correct number of quantiles
+  data <- merge(data.frame("quantile" = seq_len(nb_quantiles)),
+                data[, names(data) != "quantile"],
+                all.x = TRUE, by.x = "quantile", by.y = "row.names")
+  data[is.na(data[[obs]]), obs] <- pos_class
+  data[is.na(data[["Freq"]]), "Freq"] <- 0
 
   # compute the lift
   quantile_per <- (1L / nrow(data))

@@ -5,7 +5,7 @@
 \title{Compute the lift}
 \usage{
 compute_lift(data, obs = "obs", pos_class = "Yes",
-  quantile = "quantile")
+  quantile = "quantile", nb_quantiles = 20)
 }
 \arguments{
 \item{data}{A dataframe with the observed class, the probabilities for the
@@ -18,6 +18,9 @@ class.}
 
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}
+
+\item{nb_quantiles}{A integer (default = 20). The number of quantiles
+computed.}
 }
 \value{
 A dataframe with the lift and the cumulative lift computed for each
