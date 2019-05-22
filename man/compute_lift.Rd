@@ -19,7 +19,7 @@ class.}
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}
 
-\item{nb_quantiles}{A integer (default = 20). The number of quantiles
+\item{nb_quantiles}{An integer (default = 20). The number of quantiles
 computed.}
 }
 \value{

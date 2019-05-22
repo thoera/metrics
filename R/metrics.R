@@ -317,9 +317,10 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #' Compute the quantiles.
 #'
 #' @param data A dataframe with the probabilities for the positive class.
-#' @param prob A string (default = "prob"). The column's name of the
-#'   predicted probabilities.
-#' @param n A numeric value (default = 20). The number of quantiles to compute.
+#' @param prob A string (default = "prob"). The column's name of the predicted
+#'   probabilities.
+#' @param nb_quantiles An integer (default = 20). The number of quantiles to
+#'   compute.
 #' @return A dataframe with the quantiles computed.
 #' @seealso \code{\link{compute_lift}}, \code{\link{draw_lift}}
 #' @examples
@@ -331,10 +332,10 @@ draw_roc <- function(data, recall = "Recall", specificity = "Specificity") {
 #'
 #' quantiles <- qcut(data, prob = "prob")
 #' @export
-qcut <- function(data, prob = "prob", n = 20L) {
-  data[["quantile"]] <- (n + 1L) - findInterval(
+qcut <- function(data, prob = "prob", nb_quantiles = 20L) {
+  data[["quantile"]] <- (nb_quantiles + 1L) - findInterval(
     data[[prob]],
-    stats::quantile(data[[prob]], seq(0L, 1L, length = n + 1L)),
+    stats::quantile(data[[prob]], seq(0L, 1L, length = nb_quantiles + 1L)),
     all.inside = TRUE
   )
   return(data)
@@ -351,7 +352,7 @@ qcut <- function(data, prob = "prob", n = 20L) {
 #' @param pos_class A string (default = "Yes"). How the positive class is coded.
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
-#' @param nb_quantiles A integer (default = 20). The number of quantiles
+#' @param nb_quantiles An integer (default = 20). The number of quantiles
 #'   computed.
 #' @return A dataframe with the lift and the cumulative lift computed for each
 #'   quantile.
@@ -384,8 +385,7 @@ compute_lift <- function(
 
   # get the correct number of quantiles
   data <- merge(data.frame("quantile" = seq_len(nb_quantiles)),
-                data[, names(data) != "quantile"],
-                all.x = TRUE, by.x = "quantile", by.y = "row.names")
+                data, all.x = TRUE, by = "quantile")
   data[is.na(data[[obs]]), obs] <- pos_class
   data[is.na(data[["Freq"]]), "Freq"] <- 0
 
@@ -423,6 +423,8 @@ compute_lift <- function(
 #'   "gain_chart", "lift_curve" or "cumulative_lift_curve".
 #' @param quantile A string (default = "quantile"). The column's name of the
 #'   quantiles.
+#' @param nb_quantiles An integer (default = 20). The number of quantiles
+#'   computed.
 #' @param lift A string (default = "lift"). The column's name of the lift
 #' @param cumulative_lift A string (default = "cumulative_lift"). The column's
 #'   name of the cumulative lift.
@@ -450,6 +452,7 @@ draw_lift <- function(
   data,
   type = c("gain_chart", "lift_curve", "cumulative_lift_curve"),
   quantile = "quantile",
+  nb_quantiles = 20,
   lift = "lift",
   cumulative_lift = "cumulative_lift",
   cumulative_lift_per = "cumulative_lift_per",
@@ -468,7 +471,7 @@ draw_lift <- function(
       data <- data.table::rbindlist(data, idcol = "group")
 
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[cumulative_lift_per]],
                                         color = .data[["group"]])) +
         ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
@@ -477,7 +480,7 @@ draw_lift <- function(
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[cumulative_lift_per]])) +
         ggplot2::geom_line(ggplot2::aes(y = .data[[cumulative_lift_per_ideal]]),
                            size = 0.8, linetype = "longdash",
@@ -500,13 +503,13 @@ draw_lift <- function(
       data <- data.table::rbindlist(data, idcol = "group")
 
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[lift]],
                                         color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[lift]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }
@@ -524,13 +527,13 @@ draw_lift <- function(
       data <- data.table::rbindlist(data, idcol = "group")
 
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[cumulative_lift]],
                                         color = .data[["group"]])) +
         ggplot2::geom_line(size = 0.8, na.rm = TRUE)
     } else {
       g <- ggplot2::ggplot(data,
-                           ggplot2::aes(x = .data[[quantile]] * 0.05,
+                           ggplot2::aes(x = .data[[quantile]] / nb_quantiles,
                                         y = .data[[cumulative_lift]])) +
         ggplot2::geom_line(color = "#f8766d", size = 0.8, na.rm = TRUE)
     }

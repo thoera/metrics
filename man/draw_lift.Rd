@@ -5,8 +5,8 @@
 \title{Plot the lift curves}
 \usage{
 draw_lift(data, type = c("gain_chart", "lift_curve",
-  "cumulative_lift_curve"), quantile = "quantile", lift = "lift",
-  cumulative_lift = "cumulative_lift",
+  "cumulative_lift_curve"), quantile = "quantile", nb_quantiles = 20,
+  lift = "lift", cumulative_lift = "cumulative_lift",
   cumulative_lift_per = "cumulative_lift_per",
   cumulative_lift_per_ideal = "cumulative_lift_per_ideal")
 }
@@ -19,6 +19,9 @@ cumulative lift per quantile.}
 
 \item{quantile}{A string (default = "quantile"). The column's name of the
 quantiles.}
+
+\item{nb_quantiles}{An integer (default = 20). The number of quantiles
+computed.}
 
 \item{lift}{A string (default = "lift"). The column's name of the lift}
 

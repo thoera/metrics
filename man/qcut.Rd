@@ -4,15 +4,16 @@
 \alias{qcut}
 \title{Compute the quantiles}
 \usage{
-qcut(data, prob = "prob", n = 20L)
+qcut(data, prob = "prob", nb_quantiles = 20L)
 }
 \arguments{
 \item{data}{A dataframe with the probabilities for the positive class.}
 
-\item{prob}{A string (default = "prob"). The column's name of the
-predicted probabilities.}
+\item{prob}{A string (default = "prob"). The column's name of the predicted
+probabilities.}
 
-\item{n}{A numeric value (default = 20). The number of quantiles to compute.}
+\item{nb_quantiles}{An integer (default = 20). The number of quantiles to
+compute.}
 }
 \value{
 A dataframe with the quantiles computed.
