@@ -219,10 +219,12 @@ draw_metrics <- function(
 
   # check if 'data' is a list of dataframes or not and reshape to long format
   if (inherits(data, "data.frame")) {
-    data_lg <- data.table::melt(data, id = threshold, variable = "metrics")
+    data_lg <- data.table::melt(data.table::setDT(data),
+                                id = threshold, variable = "metrics")
   } else {
     data_lg <- lapply(data, function(x) {
-      data.table::melt(x, id = "threshold", variable = "metrics")
+      data.table::melt(data.table::setDT(x),
+                       id = "threshold", variable = "metrics")
     })
     data_lg <- data.table::rbindlist(data_lg, idcol = "set")
   }
@@ -381,12 +383,12 @@ compute_lift <- function(
   data <- as.data.frame(
     table("quantile" = data[[quantile]], obs = data[[obs]])
   )
-  data <- data[data[[obs]] == pos_class, ]
+  data <- data[data[["obs"]] == pos_class, ]
 
   # get the correct number of quantiles
   data <- merge(data.frame("quantile" = seq_len(nb_quantiles)),
                 data, all.x = TRUE, by = "quantile")
-  data[is.na(data[[obs]]), obs] <- pos_class
+  data[is.na(data[["obs"]]), "obs"] <- pos_class
   data[is.na(data[["Freq"]]), "Freq"] <- 0
 
   # compute the lift
